@@ -38,7 +38,7 @@ def generate_prompt(user_question, prompt_file, metadata_file):
     return prompt
 
 
-def run_inference(question, prompt_file="prompt_0603.md", metadata_file="metadata_xyq.sql"):
+def run_inference(question, prompt_file="prompt.md", metadata_file="metadata.sql"):
     prompt = generate_prompt(question, prompt_file, metadata_file)
     # make sure the model stops generating at triple ticks
     eos_token_id = tokenizer.convert_tokens_to_ids(["```"])[0]

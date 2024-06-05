@@ -1,5 +1,3 @@
-程序解释
-当然，我很乐意详细解释这个推理程序，并说明每个参数的含义以及如何进行调整以达到不同的预期效果。
 
 ### 代码详解
 
@@ -128,52 +126,3 @@ print(sql_query)
 通过调整这些参数，你可以控制生成文本的长度、随机性和多样性，以达到不同的预期效果。如果你有其他特定需求或问题，请随时告诉我。
 
 
-
-
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import argparse
-import time
-# 加载模型和分词器
-model_name = "defog/llama-3-sqlcoder-8b"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# 添加填充标记
-if tokenizer.pad_token is None:
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-
-model = AutoModelForCausalLM.from_pretrained(model_name)
-model.resize_token_embeddings(len(tokenizer))
-
-def generate_sql_query(user_question, create_table_statements):
-    prompt = f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nGenerate a SQL query to answer this question: `{user_question}`\n\nDDL statements:\n{create_table_statements}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nThe following SQL query best answers the question `{user_question}`:\n```sql\n"
-    
-    inputs = tokenizer(prompt, return_tensors="pt", padding=True)
-    output = model.generate(
-        inputs["input_ids"],
-        attention_mask=inputs["attention_mask"],
-        max_length=700,
-        pad_token_id=tokenizer.pad_token_id
-    )
-
-    generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-    # sql_query = generated_text.split("```sql\n")[1].split("\n```")[0]
-    sql_query = generated_text.split("```sql\n")[1].split(";")[0].strip() + ";"
-    return sql_query
-
-
-if __name__ == "__main__":
-    # Parse arguments
-    parser = argparse.ArgumentParser(description="Run inference on a question")
-    parser.add_argument("-q","--question", type=str, help="Question to run inference on")
-    args = parser.parse_args()
-    question = args.question
-    print("Loading a model and generating a SQL query for answering your question...")
-    with open('metadata.sql', "r") as f:
-        create_table_statements = f.read()
-    time1 = time.time()
-    sql_query = generate_sql_query(question, create_table_statements)
-    elapsed_time = time.time() - time1
-    print(f"Elapsed time: {elapsed_time} seconds")
-    print("生成的SQL查询语句:")
-    print(sql_query)
